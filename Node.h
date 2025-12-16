@@ -1,23 +1,22 @@
 #ifndef NODE_H
 #define NODE_H
 #include <iostream>
-#include <cstring>
+#include "Student.h"
 
 using namespace std;
 
 class Node {
  public:
-  Node();
-  Node(char* nStr);
+  Node(Student* nStudent);
   ~Node();
   
-  char* getStr();
+  Student* getStudent();
 
   void setNext(Node* nNext);
   Node* getNext();
 
  private:
-  char* str;
+  Student* student;
   Node* next;
 };
 

@@ -1,19 +1,17 @@
 #include "Node.h"
 
-Node::Node() {}
-
-Node::Node(char* nStr) {
-  strcpy(str, nStr);
+Node::Node(Student* nStudent) {
+  student = nStudent;
   next = NULL;
 }
 
 Node::~Node() {
-  str = NULL;	
+  delete student;
   next = NULL;
 }
 
-char* Node::getStr() {
-  return str;
+Student* Node::getStudent() {
+  return student;
 }
 
 void Node::setNext(Node* nNext) {
