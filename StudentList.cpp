@@ -13,7 +13,6 @@ Last Updated: 9/26/2025
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
-#include <bits/stdc++.h>
 #include "Node.h"
 #include "Student.h"
 
@@ -30,16 +29,17 @@ int calculateIndex(char* str, int hashSize);
 
 void removeStudentByID(int ID, Node* previous, Node* current, Node* &head);
 
-Node* generateRandomStudent();
-
+Node* generateRandomStudent(int ID);
+void studentGenerator(Node** &hash, int hashSize, int &currentID);
 
 int main() {
 
 
 
-	int hashSize = 100;
+	int hashSize = 500;
 	Node** hash = new Node*[hashSize];
 	char input[20];
+  int currentID = 1;
 
 	//This loop will run until the user enters "QUIT"
 	do {
@@ -56,7 +56,7 @@ int main() {
 			cout << " - ADD: Add a new student to the database." << endl;
 			cout << " - PRINT: Prints out all of the students in the database." << endl;
 			cout << " - DELETE: Remove a student from the database." << endl;
-			cout << " - AVERAGE: Calculates the average GPA of all the students." << endl;
+			cout << " - GENERATE: Generates a desired amout of random students." << endl;
 			cout << " - QUIT: Close the program" << endl;
 		}
 		else if (strcmp(input, "ADD") == 0) {
@@ -71,6 +71,9 @@ int main() {
 			//remove a student
 			removeStudent(hash, hashSize);
 		}
+    else if (strcmp(input, "GENERATE") == 0) {
+      studentGenerator(hash, hashSize, currentID);
+    }
 
 	} while (strcmp(input, "QUIT") != 0);
 
@@ -255,27 +258,57 @@ int calculateIndex(char* str, int hashSize) {
 	return sum % hashSize;
 }
 
-Node* generateRandomStudent() {
+Node* generateRandomStudent(int ID) {
 	//read files for name generator
 	ifstream firstNames("first_names.txt");
 	ifstream lastNames("last_names.txt");
 
-	srand(time(0));
+	srand(time(0) + ID);
 	
 	int firstNamesSize = 4945;	
 	int lastNamesSize = 21985;
 
 	int firstIndex = (rand() % firstNamesSize) + 1;
 	int lastIndex = (rand() % lastNamesSize) + 1;
-
-	char* firstName;
+  double GPA = (double)(rand() % 400 + 1)/100.0;
+  
+	char* firstName = new char[21];
 	for (int i = 0; i < firstIndex; i++) {
-		getLine(firstNames, firstName);
+    firstNames.getline(firstName, 20);
 	}	
 
-	char* lastName;
+	char* lastName = new char[21];
 	for (int i = 0; i < lastIndex; i++) {
-		getLine(lastNames, lastName);
+    lastNames.getline(lastName, 20);
 	}
 
+  cout << "Generated: " << firstName << " " << lastName << endl;
+
+  return new Node(new Student(firstName, lastName, ID, GPA));
+  
+}
+
+
+void studentGenerator(Node** &hash, int hashSize, int &currentID) {
+  //ask for number to generate
+  
+  int numberOfStudents = 0;
+
+	do {
+		if (cin.fail()) {
+			cinReset();
+
+		}
+		cout << "Enter number of students to generate:" << endl;
+		cin >> numberOfStudents;
+	} while (cin.fail() || numberOfStudents <= 0);
+
+  
+  //add random students 
+  for (int i = 0; i < numberOfStudents; i++) {
+    Node* newNode = generateRandomStudent(currentID);
+    currentID++;
+
+	  insertNodeInChain(hash[calculateIndex(newNode -> getStudent() -> getLastName(), hashSize)], newNode);
+  }
 }
