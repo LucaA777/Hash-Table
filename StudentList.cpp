@@ -10,6 +10,9 @@ Last Updated: 9/26/2025
 #include <iostream>
 #include <cstring>
 #include <cmath>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
 #include <bits/stdc++.h>
 #include "Node.h"
 #include "Student.h"
@@ -27,7 +30,12 @@ int calculateIndex(char* str, int hashSize);
 
 void removeStudentByID(int ID, Node* previous, Node* current, Node* &head);
 
+Node* generateRandomStudent();
+
+
 int main() {
+
+
 
 	int hashSize = 100;
 	Node** hash = new Node*[hashSize];
@@ -247,3 +255,27 @@ int calculateIndex(char* str, int hashSize) {
 	return sum % hashSize;
 }
 
+Node* generateRandomStudent() {
+	//read files for name generator
+	ifstream firstNames("first_names.txt");
+	ifstream lastNames("last_names.txt");
+
+	srand(time(0));
+	
+	int firstNamesSize = 4945;	
+	int lastNamesSize = 21985;
+
+	int firstIndex = (rand() % firstNamesSize) + 1;
+	int lastIndex = (rand() % lastNamesSize) + 1;
+
+	char* firstName;
+	for (int i = 0; i < firstIndex; i++) {
+		getLine(firstNames, firstName);
+	}	
+
+	char* lastName;
+	for (int i = 0; i < lastIndex; i++) {
+		getLine(lastNames, lastName);
+	}
+
+}
