@@ -32,11 +32,14 @@ void removeStudentByID(int ID, Node* previous, Node* current, Node* &head);
 Node* generateRandomStudent(int ID);
 void studentGenerator(Node** &hash, int hashSize, int &currentID);
 
+bool expandHashNeeded(Node** &hash, int hashSize);
+int getLinkedListDepth(Node* current, int count);
+
+
 int main() {
 
 
-
-	int hashSize = 500;
+	int hashSize = 100;
 	Node** hash = new Node*[hashSize];
 	char input[20];
   int currentID = 1;
@@ -50,6 +53,7 @@ int main() {
 
 		cout << endl;
 
+    //process input 
 		if (strcmp(input, "HELP") == 0) {
 			//show all the valid commands
 			cout << "List of commands:" << endl;
@@ -74,6 +78,9 @@ int main() {
     else if (strcmp(input, "GENERATE") == 0) {
       studentGenerator(hash, hashSize, currentID);
     }
+
+    //check to see if hash needs to be resized
+    cout << "Hash expansion needed: " << expandHashNeeded(hash, hashSize) << endl;
 
 	} while (strcmp(input, "QUIT") != 0);
 
@@ -311,4 +318,38 @@ void studentGenerator(Node** &hash, int hashSize, int &currentID) {
 
 	  insertNodeInChain(hash[calculateIndex(newNode -> getStudent() -> getLastName(), hashSize)], newNode);
   }
+}
+
+bool expandHashNeeded(Node** &hash, int hashSize) {
+  /*
+  * Expansion conditions:
+  * - At least half of the table is full.
+  * - A linked list within a slot is at least 3 nodes deep.
+  */
+
+  int usedSlots = 0;
+  for (int i = 0; i < hashSize; i++) {
+    if (hash[i] != NULL) {
+      usedSlots++;
+
+      if (getLinkedListDepth(hash[i], 0) > 3) {
+        return true;
+      }
+    }
+  }
+
+  return usedSlots >= hashSize / 2;
+}
+
+int getLinkedListDepth(Node* current, int count) {
+  //if at the end of the list, return count
+  if (current -> getNext() == NULL) {
+    return count; 
+  }
+
+  //otherwise keep going
+  else {
+    return getLinkedListDepth(current -> getNext(), count + 1);
+  }
+
 }
