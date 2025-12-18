@@ -13,6 +13,7 @@ Last Updated: 9/26/2025
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
 #include "Node.h"
 #include "Student.h"
 
@@ -36,7 +37,8 @@ bool expandHashNeeded(Node** &hash, int hashSize);
 int getLinkedListDepth(Node* current, int count);
 
 void rehash(Node** &hash, int &hashSize, Node** &newHash, int newHashSize);
-Node* disconnectLastNode(Node* current, Node* previous);
+Node* disconnectLastNode(Node* &current, Node* &previous);
+void clearHash(Node** &hash, int newHash);
 
 
 int main() {
@@ -44,8 +46,9 @@ int main() {
 
 	int hashSize = 100;
 	Node** hash = new Node*[hashSize];
+	clearHash(hash, hashSize);
 	char input[20];
-  int currentID = 1;
+	int currentID = 1;
 
 	//This loop will run until the user enters "QUIT"
 	do {
@@ -56,7 +59,7 @@ int main() {
 
 		cout << endl;
 
-    //process input 
+		//process input 
 		if (strcmp(input, "HELP") == 0) {
 			//show all the valid commands
 			cout << "List of commands:" << endl;
@@ -78,20 +81,22 @@ int main() {
 			//remove a student
 			removeStudent(hash, hashSize);
 		}
-    else if (strcmp(input, "GENERATE") == 0) {
-      studentGenerator(hash, hashSize, currentID);
-    }
+		else if (strcmp(input, "GENERATE") == 0) {
+			//generate the desired amout of students
+			studentGenerator(hash, hashSize, currentID);
+		}
 
-    //check to see if hash needs to be resized 
-    
-    if (expandHashNeeded(hash, hashSize)) {
-      int newHashSize = hashSize * 2;
-      Node** newHash = new Node*[newHashSize];
-      rehash(hash, hashSize, newHash, newHashSize);
-      cout << "Rehashed into " << hashSize << " spots." << endl;
-    }
+		//check to see if hash needs to be resized 
+		//resize it if it does
+		while (expandHashNeeded(hash, hashSize)) {
+			cout << endl;
+			int newHashSize = hashSize * 2;
+			Node** newHash = new Node*[newHashSize];
+			clearHash(newHash, newHashSize);
+			rehash(hash, hashSize, newHash, newHashSize);
+			cout << "Rehashed into " << hashSize << " spots." << endl;
+		}
 
-    cout << "Hash expansion needed: " << expandHashNeeded(hash, hashSize) << endl;
 
 	} while (strcmp(input, "QUIT") != 0);
 
@@ -144,7 +149,7 @@ void addStudent(Node** &hash, int hashSize) {
 
 	//adds student to hash table
 	Node* newStudent = new Node(new Student(firstName, lastName, ID, GPA));
-	
+
 	insertNodeInChain(hash[calculateIndex(lastName, hashSize)], newStudent);
 }
 
@@ -282,35 +287,33 @@ Node* generateRandomStudent(int ID) {
 	ifstream lastNames("last_names.txt");
 
 	srand(time(0) + ID);
-	
+
 	int firstNamesSize = 4945;	
 	int lastNamesSize = 21985;
 
 	int firstIndex = (rand() % firstNamesSize) + 1;
 	int lastIndex = (rand() % lastNamesSize) + 1;
-  double GPA = (double)(rand() % 400 + 1)/100.0;
-  
+	double GPA = (double)(rand() % 400 + 1)/100.0;
+
 	char* firstName = new char[21];
 	for (int i = 0; i < firstIndex; i++) {
-    firstNames.getline(firstName, 20);
+		firstNames.getline(firstName, 20);
 	}	
 
 	char* lastName = new char[21];
 	for (int i = 0; i < lastIndex; i++) {
-    lastNames.getline(lastName, 20);
+		lastNames.getline(lastName, 20);
 	}
 
-  cout << "Generated: " << firstName << " " << lastName << endl;
+	return new Node(new Student(firstName, lastName, ID, GPA));
 
-  return new Node(new Student(firstName, lastName, ID, GPA));
-  
 }
 
 
 void studentGenerator(Node** &hash, int hashSize, int &currentID) {
-  //ask for number to generate
-  
-  int numberOfStudents = 0;
+	//ask for number to generate
+
+	int numberOfStudents = 0;
 
 	do {
 		if (cin.fail()) {
@@ -321,75 +324,101 @@ void studentGenerator(Node** &hash, int hashSize, int &currentID) {
 		cin >> numberOfStudents;
 	} while (cin.fail() || numberOfStudents <= 0);
 
-  
-  //add random students 
-  for (int i = 0; i < numberOfStudents; i++) {
-    Node* newNode = generateRandomStudent(currentID);
-    currentID++;
+	cinReset();
 
-	  insertNodeInChain(hash[calculateIndex(newNode -> getStudent() -> getLastName(), hashSize)], newNode);
-  }
+
+	//add random students 
+	for (int i = 0; i < numberOfStudents; i++) {
+		Node* newNode = generateRandomStudent(currentID);
+		currentID++;
+
+		insertNodeInChain(hash[calculateIndex(newNode -> getStudent() -> getLastName(), hashSize)], newNode);
+	}
 }
 
 bool expandHashNeeded(Node** &hash, int hashSize) {
-  /*
-  * Expansion conditions:
-  * - At least half of the table is full.
-  * - A linked list within a slot is at least 3 nodes deep.
-  */
+	/*
+	 * Expansion conditions:
+	 * - At least half of the table is full.
+	 * - A linked list within a slot is at least 3 nodes deep.
+	 */
 
-  int usedSlots = 0;
-  for (int i = 0; i < hashSize; i++) {
-    if (hash[i] != NULL) {
-      usedSlots++;
+	int usedSlots = 0;
+	for (int i = 0; i < hashSize; i++) {
+		if (hash[i] != NULL) {
+			usedSlots++;
 
-      if (getLinkedListDepth(hash[i], 0) > 3) {
-        return true;
-      }
-    }
-  }
+			if (getLinkedListDepth(hash[i], 1) > 3) {
+				return true;
+			}
+		}
+	}
 
-  return usedSlots >= hashSize / 2;
+	return usedSlots >= hashSize / 2;
 }
 
 int getLinkedListDepth(Node* current, int count) {
-  //if at the end of the list, return count
-  if (current -> getNext() == NULL) {
-    return count; 
-  }
+	//if at the end of the list, return count
+	if (current -> getNext() == NULL) {
+		return count; 
+	}
 
-  //otherwise keep going
-  else {
-    return getLinkedListDepth(current -> getNext(), count + 1);
-  }
+	//otherwise keep going
+	else {
+		return getLinkedListDepth(current -> getNext(), count + 1);
+	}
 
 }
 
 void rehash(Node** &hash, int &hashSize, Node** &newHash, int newHashSize) {
-  for (int i = 0; i < hashSize; i++) {
-    //go through each node at this index and rehash it to the new hash
-    while (hash[i] != NULL) {
-      Node* node = disconnectLastNode(hash[i], NULL);
-      int index = calculateIndex(node -> getStudent() -> getLastName(), newHashSize);
-      insertNodeInChain(newHash[index], node); 
-    }
-    hash[i] = NULL;
-  }
 
-  //reassign new hash to old hash 
-  hash = newHash;
-  hashSize = newHashSize;
+	cout << "Beginning rehash..." << endl;
+
+	for (int i = 0; i < hashSize; i++) {
+		//go through each node at this index and rehash it to the new hash
+
+		while (hash[i] != NULL) {
+			Node* null = NULL;
+			Node* node = disconnectLastNode(hash[i], null);
+
+			if (getLinkedListDepth(hash[i], 1) <= 1) {
+				hash[i] = NULL;
+			}
+			int index = calculateIndex(node -> getStudent() -> getLastName(), newHashSize);
+			insertNodeInChain(newHash[index], node);
+		}
+		hash[i] = NULL;
+	}
+
+
+	//reassign new hash to old hash 
+	hash = newHash;
+	hashSize = newHashSize;
+
+	cout << "Rehash completed." << endl;
 }
 
-Node* disconnectLastNode(Node* current, Node* previous) {
-  if (current -> getNext() == NULL) {
-    
-    if (previous != NULL) {
-      previous -> setNext(NULL);
-    }
+Node* disconnectLastNode(Node* &current, Node* &previous) {
+	//if this is the last node, disconnect it and return it
+	if (current -> getNext() == NULL) {
 
-    return current;
-  }
+		if (previous != NULL) {
+			previous -> setNext(NULL);
+		}
 
-  return disconnectLastNode(current -> getNext(), current);
+		current -> setNext(NULL);
+
+		return current;
+	}
+
+
+	//if not, keep digging
+	Node* next = current -> getNext();
+	return disconnectLastNode(next, current);
+}
+void clearHash(Node** &hash, int hashSize) {
+	//sets all values to null
+	for (int i = 0; i < hashSize; i++) {
+		hash[i] = NULL;
+	}
 }
