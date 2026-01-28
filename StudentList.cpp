@@ -4,7 +4,7 @@
    This program serves as a database for students. The user may addand remove students, as well as see the complete list of students they've entered. Each student has a first and last name, as well as an ID number and a GPA (0.0-5.0).
 
 Author: Luca Ardanaz
-Last Updated: 9/26/2025
+Last Updated: 28/1/2026
 */
 
 #include <iostream>
